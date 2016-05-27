@@ -151,7 +151,7 @@ function aapc_menu_plugin_options() {
                         foreach ($categories as $only_cat) {
                             $cat_string .= get_cat_name($only_cat) . ", ";
                         }
-                        echo echo esc_html(rtrim($cat_string, ' , '));
+                         echo esc_html(rtrim($cat_string, ' , '));
                     }
                     ?>
                 </th>
