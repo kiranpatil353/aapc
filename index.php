@@ -14,6 +14,11 @@ add_action('admin_init', 'load_scripts');
 if (isset($_POST) && !empty($_POST)) {
     post_tag_form();
 }
+//custom PHP function
+function in_arrayi($needle, $haystack)
+{
+	return in_array(strtolower($needle), array_map('strtolower', $haystack));
+}
 
 function post_tag_form() {
 	// extract to variables
@@ -22,12 +27,10 @@ function post_tag_form() {
 	
     if (isset($cat)) {
 		// sanitising and escaping data
-		$cat = sanitize_text_field($cat);
         $serialized_Array = serialize($cat);
-
         if (!isset($wpdb))
             $wpdb = $GLOBALS['wpdb'];
-        $wpdb->insert($wpdb->prefix . 'tag_category_mapping', array('tag_name' => sanitize_text_field($tag_name), 'category_list' => $serialized_Array), array('%s', '%s'));
+        $wpdb->insert($wpdb->prefix . 'tag_category_mapping', array('tag_name' => sanitize_text_field($tag_name), 'category_list' => sanitize_text_field($serialized_Array)), array('%s', '%s'));
     }
 	// only if numeric values 
     if (isset($_REQUEST['deleteval']) && is_numeric($_REQUEST['deleteval'])) {
@@ -49,8 +52,9 @@ function aapc_add_category($post_id = 0) {
     $catArray = array();
     $finalArray = array();
     $post_tags = wp_get_post_tags($post_id, array('fields' => 'names'));
+	
     foreach ($all_tags as $tag) {
-        if ($tag->tag_name && in_array($tag->tag_name, $post_tags, false)) {
+        if ($tag->tag_name && in_arrayi($tag->tag_name, $post_tags)) {
             $catArray = unserialize($tag->category_list);
             $finalArray = array_merge($finalArray, $catArray);
             wp_set_post_categories($post_id, $finalArray, $append = false);
@@ -208,4 +212,5 @@ function aapc_hook_deactivate() {
 }
 
 register_deactivation_hook(__FILE__, 'aapc_hook_deactivate');
+
 ?>
