@@ -6,27 +6,26 @@
  * License: GPLv2
  */
 // loading js files 
-function load_scripts() {
+function auto_apc_load_scripts() {
     wp_enqueue_script('slider-validation-js', plugins_url('js/validation.js', __FILE__));
 }
-add_action('admin_init', 'load_scripts');
+add_action('admin_init', 'auto_apc_load_scripts');
 // If user has submitted forms 
 if (isset($_POST) && !empty($_POST)) {
-    post_tag_form();
+    auto_apc_post_tag_form();
 }
 //custom PHP function
-function in_arrayi($needle, $haystack)
+function auto_apc_in_arrayi($needle, $haystack)
 {
 	return in_array(strtolower($needle), array_map('strtolower', $haystack));
 }
 
-function post_tag_form() {
+function auto_apc_post_tag_form() {
 	// extract to variables
-	
     extract($_POST);
 	
     if (isset($cat)) {
-		// sanitising and escaping data
+		
         $serialized_Array = serialize($cat);
         if (!isset($wpdb))
             $wpdb = $GLOBALS['wpdb'];
@@ -37,12 +36,12 @@ function post_tag_form() {
         $id = $_REQUEST['deleteval'];
         if (!isset($wpdb))
             $wpdb = $GLOBALS['wpdb'];
-        $aapc_table_name = $wpdb->prefix . 'tag_category_mapping';
-        $wpdb->query("DELETE FROM $aapc_table_name WHERE ID = $id ");
+        $auto_apc_table_name = $wpdb->prefix . 'tag_category_mapping';
+        $wpdb->query("DELETE FROM $auto_apc_table_name WHERE ID = $id ");
     }
 }
 
-function aapc_add_category($post_id = 0) {
+function auto_apc_add_category($post_id = 0) {
     if (!$post_id)
         return;
     if (!isset($wpdb))
@@ -54,7 +53,7 @@ function aapc_add_category($post_id = 0) {
     $post_tags = wp_get_post_tags($post_id, array('fields' => 'names'));
 	
     foreach ($all_tags as $tag) {
-        if ($tag->tag_name && in_arrayi($tag->tag_name, $post_tags)) {
+        if ($tag->tag_name && auto_apc_in_arrayi($tag->tag_name, $post_tags)) {
             $catArray = unserialize($tag->category_list);
             $finalArray = array_merge($finalArray, $catArray);
             wp_set_post_categories($post_id, $finalArray, $append = false);
@@ -62,29 +61,29 @@ function aapc_add_category($post_id = 0) {
     }
 }
 
-add_action('publish_post', 'aapc_add_category');
+add_action('publish_post', 'auto_apc_add_category');
 
 //
 
-function aapc_admin_menu() {
+function auto_apc_admin_menu() {
 
-    add_menu_page('Auto Category Tag', 'Auto Category Tag', 'manage_options', 'category-mapping', 'aapc_menu_plugin_options');
+    add_menu_page('Auto Category Tag', 'Auto Category Tag', 'manage_options', 'category-mapping', 'auto_apc_menu_plugin_options');
 }
 
 //
-add_action('admin_menu', 'aapc_admin_menu');
+add_action('admin_menu', 'auto_apc_admin_menu');
 
 //
 
-function aapc_add_submenu_page() {
+function auto_apc_add_submenu_page() {
     add_submenu_page(
-            'category-mapping', 'Assign New', 'Assign New', 'manage_options', 'mapnew_categories', 'aapc_add_options_function'
+            'category-mapping', 'Assign New', 'Assign New', 'manage_options', 'mapnew_categories', 'auto_apc_add_options_function'
     );
 }
 
-add_action('admin_menu', 'aapc_add_submenu_page');
+add_action('admin_menu', 'auto_apc_add_submenu_page');
 
-function aapc_add_options_function() {
+function auto_apc_add_options_function() {
     ?>
     <div class="wrap">
         <h2><?php echo esc_html('Assign Tag to Categories '); ?></h2>
@@ -117,7 +116,7 @@ function aapc_add_options_function() {
     <?php
 }
 // display tag list 
-function aapc_menu_plugin_options() {
+function auto_apc_menu_plugin_options() {
     $cat_string = '';
     if (!isset($wpdb))
         $wpdb = $GLOBALS['wpdb'];
@@ -183,13 +182,13 @@ function aapc_menu_plugin_options() {
  * 
  */
 					
-function aapc_plugin_options_install() {
+function auto_apc_plugin_options_install() {
     if (!isset($wpdb))
     $wpdb = $GLOBALS['wpdb'];
-    $aapc_table_name = $wpdb->prefix . 'tag_category_mapping';
+    $auto_apc_table_name = $wpdb->prefix . 'tag_category_mapping';
 
-    if ($wpdb->get_var("show tables like '$aapc_table_name'") != $aapc_table_name) {
-        $sql = "CREATE TABLE " . $aapc_table_name . " (
+    if ($wpdb->get_var("show tables like '$auto_apc_table_name'") != $auto_apc_table_name) {
+        $sql = "CREATE TABLE " . $auto_apc_table_name . " (
 		id INT NOT NULL AUTO_INCREMENT,
 		tag_name TEXT NOT NULL,
 		category_list TEXT NOT NULL,
@@ -201,16 +200,16 @@ function aapc_plugin_options_install() {
     }
 }
 
-register_activation_hook(__FILE__, 'aapc_plugin_options_install');
+register_activation_hook(__FILE__, 'auto_apc_plugin_options_install');
 
 // Plugin deactivation hook
-function aapc_hook_deactivate() {
+function auto_apc_hook_deactivate() {
     if (!isset($wpdb))
     $wpdb = $GLOBALS['wpdb'];
-    $aapc_table_name = $wpdb->prefix . 'tag_category_mapping';
-    $wpdb->query("DROP TABLE IF EXISTS $aapc_table_name");
+    $auto_apc_table_name = $wpdb->prefix . 'tag_category_mapping';
+    $wpdb->query("DROP TABLE IF EXISTS $auto_apc_table_name");
 }
 
-register_deactivation_hook(__FILE__, 'aapc_hook_deactivate');
+register_deactivation_hook(__FILE__, 'auto_apc_hook_deactivate');
 
 ?>
