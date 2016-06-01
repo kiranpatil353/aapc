@@ -8,12 +8,22 @@
 // loading js files 
 function auto_apc_load_scripts() {
     wp_enqueue_script('slider-validation-js', plugins_url('js/validation.js', __FILE__));
+	//wordpress nonce check
+	if ( isset( $_POST['tag_form_nonce_field'] ) && wp_verify_nonce( $_POST['tag_form_nonce_field'], 'tag_form_action' ) ) {
+	// process form data
+	 auto_apc_post_tag_form();
+	 
+	} 
+	//wordpress nonce check
+	if ( isset( $_POST['tag_del_nonce_field'] ) && wp_verify_nonce( $_POST['tag_del_nonce_field'], 'tag_del_action' ) ) {
+	// process form data
+		auto_apc_delete_tag();
+	 
+	} 
 }
 add_action('admin_init', 'auto_apc_load_scripts');
-// If user has submitted forms 
-if (isset($_POST) && !empty($_POST)) {
-    auto_apc_post_tag_form();
-}
+
+
 //custom PHP function
 function auto_apc_in_arrayi($needle, $haystack)
 {
@@ -21,6 +31,12 @@ function auto_apc_in_arrayi($needle, $haystack)
 }
 
 function auto_apc_post_tag_form() {
+	
+	// Validate user role/permissions
+    if (!current_user_can('manage_options')) {
+        wp_die(__('You do not have sufficient permissions to access this page.'));
+    }
+	
 	// extract to variables
     extract($_POST);
 	
@@ -31,7 +47,15 @@ function auto_apc_post_tag_form() {
             $wpdb = $GLOBALS['wpdb'];
         $wpdb->insert($wpdb->prefix . 'tag_category_mapping', array('tag_name' => sanitize_text_field($tag_name), 'category_list' => sanitize_text_field($serialized_Array)), array('%s', '%s'));
     }
-	// only if numeric values 
+}
+
+function auto_apc_delete_tag(){
+		// only if numeric values 
+	// Validate user role/permissions
+    if (!current_user_can('manage_options')) {
+        wp_die(__('You do not have sufficient permissions to access this page.'));
+    }
+	
     if (isset($_REQUEST['deleteval']) && is_numeric($_REQUEST['deleteval'])) {
         $id = $_REQUEST['deleteval'];
         if (!isset($wpdb))
@@ -39,7 +63,7 @@ function auto_apc_post_tag_form() {
         $auto_apc_table_name = $wpdb->prefix . 'tag_category_mapping';
         $wpdb->query("DELETE FROM $auto_apc_table_name WHERE ID = $id ");
     }
-}
+	}
 
 function auto_apc_add_category($post_id = 0) {
     if (!$post_id)
@@ -84,10 +108,22 @@ function auto_apc_add_submenu_page() {
 add_action('admin_menu', 'auto_apc_add_submenu_page');
 
 function auto_apc_add_options_function() {
+	
+	// Validate user role/permissions
+    if (!current_user_can('manage_options')) {
+        wp_die(__('You do not have sufficient permissions to access this page.'));
+    }
     ?>
+		
     <div class="wrap">
         <h2><?php echo esc_html('Assign Tag to Categories '); ?></h2>
         <form method="post" name="tag_form" id="tag_form" action="" >
+
+			<?php 
+			// WordPress nonce field
+			wp_nonce_field( 'tag_form_action', 'tag_form_nonce_field' );
+			
+			?>
             <table class="form-table">
                 <tr valign="top">
                     <th scope="row"><?php echo esc_html('Enter Tag Name'); ?></th>
@@ -160,6 +196,11 @@ function auto_apc_menu_plugin_options() {
                 </th>
                 <th>
             <form action="" id="delfrm<?php echo $tag->id; ?>" name="delfrm<?php echo $tag->id; ?>" method="post">
+			<?php 
+			// WordPress nonce field
+			wp_nonce_field( 'tag_del_action', 'tag_del_nonce_field' );
+			
+			?>
                 <a href="javascript:;"onclick="javascript:confirm('Do you really want to delete') ? validate(event, <?php echo $tag->id; ?>) : 0"  /><?php echo esc_html('Delete'); ?> </a>
                 <input type="hidden" name="deleteval" id="deleteval" value="<?php echo esc_html($tag->id); ?>" />
 			</form>
